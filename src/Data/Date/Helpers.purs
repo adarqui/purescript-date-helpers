@@ -177,8 +177,7 @@ readDate f =
               Right Nothing -> Left (TypeMismatch "invalid date" "asdf")
               Left a -> Left a
        "String" -> do
-         e_s <- unsafeReadTagged "String" f
-         case e_s of
+         case (unsafeReadTagged "String" f) of
               Left a  -> Left a
               Right s ->
                 case D.fromString s of
