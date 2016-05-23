@@ -9,6 +9,7 @@ module Data.Date.Helpers (
   , dayOfMonth
   , unYear
   , unDayOfMonth
+  , threeDecimalFix
   , threeDecimalCandidate
   , readDate
   , toISOString
@@ -149,9 +150,21 @@ unDayOfMonth (D.DayOfMonth n) = n
 
 
 
+threeDecimalFix :: String -> Maybe String
+threeDecimalFix s =
+  case s' of
+       [fst_half, snd_half] -> Just $ fst_half <> "." <> Str.take 3 snd_half <> "Z"
+       _                    -> Nothing
+  where
+  s' = Str.split "." s
+
+
+
 threeDecimalCandidate :: String -> Maybe D.Date
 threeDecimalCandidate s =
-  D.fromString $ (Str.take 4 $ Str.takeWhile (/= '.') s) <> "Z"
+  case threeDecimalFix s of
+       Nothing -> Nothing
+       Just s' -> D.fromString s'
 
 
 

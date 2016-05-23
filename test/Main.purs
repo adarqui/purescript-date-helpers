@@ -7,7 +7,7 @@ import Data.Argonaut.Core        (jsonEmptyObject)
 import Data.Argonaut.Combinators ((.?), (~>), (:=))
 import Data.Argonaut.Decode      (class DecodeJson, decodeJson)
 import Data.Argonaut.Encode      (class EncodeJson, encodeJson)
-import Data.Date.Helpers         (Date, dateFromString, toISOString, defaultDate)
+import Data.Date.Helpers         (Date, dateFromString, toISOString, defaultDate, threeDecimalFix)
 import Data.Either               (Either, either)
 import Data.JSON                 (class FromJSON, class ToJSON, JValue(JObject), toJSON
                                  , parseJSON, fail, (.:), (.=), object)
@@ -144,6 +144,10 @@ main = runTest do
 
 
   test "Weird case: threeDecimalCandidate" do
+    Assert.equal
+      (Just "2015-09-15T05:19:18.556Z")
+      $ threeDecimalFix "2015-09-15T05:19:18.556641000000Z"
+
     Assert.equal
       "2015-09-15T05:19:18.556Z"
       $ either id toISOString (decodeJson (encodeJson (dateFromString "2015-09-15T05:19:18.556641000000Z")) :: Either String Date)
