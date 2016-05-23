@@ -9,6 +9,7 @@ module Data.Date.Helpers (
   , dayOfMonth
   , unYear
   , unDayOfMonth
+  , threeDecimalCandidate
   , readDate
   , toISOString
   , yyyy_mm_dd

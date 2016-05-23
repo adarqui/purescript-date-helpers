@@ -143,6 +143,12 @@ main = runTest do
       $ either (const test2_a) id (parseJSON (toJSON test2_0) :: Either String Test2)
 
 
+  test "Weird case: threeDecimalCandidate" do
+    Assert.equal
+      "2015-09-15T05:19:18.556Z"
+      $ either id toISOString (decodeJson (encodeJson (dateFromString "2015-09-15T05:19:18.556641000000Z")) :: Either String Date)
+
+
   where
   test1_0 = Test1 {f1: false, d1: defaultDate}
   test1_a = Test1 {f1: true,  d1: defaultDate}
