@@ -35,7 +35,7 @@ import Data.Maybe           (Maybe (..))
 import Data.Maybe.Unsafe    (fromJust)
 import Prelude              ( class Show, class Ord, class Eq
                             , show, compare, eq, pure, bind
-                            , ($), (+), (<<<), (<$>), (++), (/=))
+                            , ($), (+), (<<<), (<$>), (++), (/=), (<>))
 
 
 
@@ -150,7 +150,7 @@ unDayOfMonth (D.DayOfMonth n) = n
 
 threeDecimalCandidate :: String -> Maybe D.Date
 threeDecimalCandidate s =
-  D.fromString $ Str.take 4 $ Str.takeWhile (/= '.') s
+  D.fromString $ (Str.take 4 $ Str.takeWhile (/= '.') s) <> "Z"
 
 
 
