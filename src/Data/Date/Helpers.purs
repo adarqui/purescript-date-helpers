@@ -166,20 +166,20 @@ readDate f =
        "String" -> do
          e_s <- unsafeReadTagged "String" f
          case e_s of
-           Left a  -> Left a
-           Right s ->
-             case D.fromString s of
-               Just d  -> Right (Date d)
-               Nothing ->
-                 -- weird scenario: Perhaps s is of the form: 2015-09-15T05:19:18.556641000000Z
-                 -- everything (your phone, browser, etc) works fine.. except your kindle paperwhite.
-                 -- for some reason this device wants: 2015-09-15T05:19:18.556 (3 decimal places)
-                 -- that's what this weird piece of extra logic/parsing addresses:
-                 -- https://en.wikipedia.org/wiki/ISO_8601#Times
-                 -- hdgarrood is always a big help with date issues
-                 case threeDecimalCandidate s of
-                   Nothing -> Left (TypeMismatch "invalid date" "invalid date")
-                   Just d  -> Right (Date d)
+              Left a  -> Left a
+              Right s ->
+                case D.fromString s of
+                  Just d  -> Right (Date d)
+                  Nothing ->
+                    -- weird scenario: Perhaps s is of the form: 2015-09-15T05:19:18.556641000000Z
+                    -- everything (your phone, browser, etc) works fine.. except your kindle paperwhite.
+                    -- for some reason this device wants: 2015-09-15T05:19:18.556 (3 decimal places)
+                    -- that's what this weird piece of extra logic/parsing addresses:
+                    -- https://en.wikipedia.org/wiki/ISO_8601#Times
+                    -- hdgarrood is always a big help with date issues
+                    case threeDecimalCandidate s of
+                      Nothing -> Left (TypeMismatch "invalid date" "invalid date")
+                      Just d  -> Right (Date d)
 
        "Number" ->
          case D.fromEpochMilliseconds <<< T.Milliseconds <$> unsafeReadTagged "Number" f of
