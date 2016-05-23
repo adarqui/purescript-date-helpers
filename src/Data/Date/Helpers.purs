@@ -150,7 +150,7 @@ unDayOfMonth (D.DayOfMonth n) = n
 
 threeDecimalCandidate :: String -> Maybe D.Date
 threeDecimalCandidate s =
-  D.fromString $ Str.drop 3 $ Str.takeWhile (/= '.') s
+  D.fromString $ Str.drop 4 $ Str.takeWhile (/= '.') s
 
 
 
