@@ -72,6 +72,18 @@ unYear :: Year -> Int
 unDayOfMonth :: DayOfMonth -> Int
 ```
 
+#### `threeDecimalFix`
+
+``` purescript
+threeDecimalFix :: String -> Maybe String
+```
+
+#### `threeDecimalCandidate`
+
+``` purescript
+threeDecimalCandidate :: String -> Maybe Date
+```
+
 #### `readDate`
 
 ``` purescript
