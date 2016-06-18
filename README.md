@@ -8,14 +8,20 @@ Not sure if I even needed to create this. Though, I couldn't find anything out t
 
 Modeled after & code re-used from something parsonsmatt wrote.
 
-
-
 ## Tests
 
 ```make tests```
 
-
-
 ## Examples
 
 see: tests/Test.purs
+
+## Installation
+
+```
+bower install purescript-date-helpers
+```
+
+## Documentation
+
+Module documentation is [published on Pursuit](http://pursuit.purescript.org/packages/purescript-date-helpers).
