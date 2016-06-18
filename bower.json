@@ -1,14 +1,21 @@
 {
   "name": "purescript-date-helpers",
-  "version": "1.0.0",
-  "moduleType": [
-    "node"
-  ],
+  "homepage": "https://github.com/adarqui/purescript-date-helpers",
+  "description": "Some Date helpers I needed.. modeled after something I saw from parsonsmatt",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/adarqui/purescript-date-helpers.git"
+  },
   "ignore": [
     "**/.*",
-    "node_modules",
     "bower_components",
-    "output"
+    "node_modules",
+    "output",
+    "test",
+    "bower.json",
+    "package.json"
+
   ],
   "dependencies": {
     "purescript-json": "^0.5.0",
