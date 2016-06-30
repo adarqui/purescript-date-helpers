@@ -1,43 +1,41 @@
 module Data.Date.Helpers (
     Date
   , underlyingDate
-  , now
   , dateFromString
   , defaultDate
   , year
   , month
+  , DayOfMonth (..)
   , dayOfMonth
-  , unYear
-  , unDayOfMonth
   , threeDecimalFix
   , threeDecimalCandidate
   , readDate
-  , toISOString
   , yyyy_mm_dd
   , failDate
+  , toISOStringNoEff
 ) where
 
 
 
-import Control.Monad.Eff    (Eff)
-import Data.Argonaut.Core   (toString)
-import Data.Argonaut.Decode (class DecodeJson)
-import Data.Argonaut.Encode (class EncodeJson, encodeJson)
-import Data.Enum            (fromEnum)
-import Data.Either          (Either(Left,Right))
-import Data.Foreign         (F, Foreign, ForeignError(TypeMismatch), tagOf, unsafeReadTagged)
-import Data.Foreign.Class   (class IsForeign)
-import Data.Function        (Fn2, runFn2, on)
-import Data.JSON            (class ToJSON, class FromJSON, JValue(JString), fail)
-import Data.String          as Str
-import Data.Date            as D
-import Data.Date.UTC        as U
-import Data.Time            as T
-import Data.Maybe           (Maybe (..))
-import Data.Maybe.Unsafe    (fromJust)
-import Prelude              ( class Show, class Ord, class Eq
-                            , show, compare, eq, pure, bind
-                            , ($), (+), (<<<), (<$>), (++), (/=), (<>))
+import Control.Monad.Eff        (Eff)
+import Data.Argonaut.Core       (toString)
+import Data.Argonaut.Decode     (class DecodeJson)
+import Data.Argonaut.Encode     (class EncodeJson, encodeJson)
+import Data.Enum                (fromEnum)
+import Data.Either              (Either(Left,Right))
+import Data.Foreign             (F, Foreign, ForeignError(TypeMismatch), tagOf, unsafeReadTagged)
+import Data.Foreign.Class       (class IsForeign)
+import Data.Function.Uncurried  (Fn2(), runFn2)
+import Data.Function            (on)
+import Data.JSDate              (JSDate, toDateTime, fromDateTime)
+import Data.String              as Str
+import Data.Date                as D
+import Data.DateTime            (DateTime, date)
+import Data.Time.Duration       (Milliseconds(Milliseconds)) as T
+import Data.Maybe               (Maybe (..), fromJust)
+import Prelude                  (class Show, class Ord, class Eq
+                                ,show, compare, eq, pure
+                                ,($), (+), (<<<), (<$>), (==), (/=), (<>), (>>=))
 
 
 
@@ -48,7 +46,7 @@ import Prelude              ( class Show, class Ord, class Eq
 
 
 
-newtype Date = Date D.Date
+newtype Date = Date DateTime
 
 
 
@@ -63,26 +61,12 @@ instance dateOrd :: Ord Date where
 
 
 instance dateShow :: Show Date where
-  show = toISOString
+  show (Date dt) = toISOStringNoEff (fromDateTime dt)
 
 
 
 instance isForeignDate :: IsForeign Date where
   read = readDate
-
-
-
-instance dateFromJSON :: FromJSON Date where
-  parseJSON (JString s) =
-    case dateFromString s of
-         Nothing -> failDate
-         Just d  -> pure d
-  parseJSON _           = failDate
-
-
-
-instance dateToJSON :: ToJSON Date where
-  toJSON d = JString (toISOString d)
 
 
 
@@ -97,56 +81,32 @@ instance dateDecodeJson :: DecodeJson Date where
 
 
 instance dateEncodeJson :: EncodeJson Date where
-  encodeJson d = encodeJson (toISOString d)
+  encodeJson (Date dt) = encodeJson (toISOStringNoEff $ fromDateTime dt)
 
 
 
-foreign import jsDateMethod :: forall a. Fn2 String D.JSDate a
-
-
-
-underlyingDate :: Date -> D.Date
-underlyingDate (Date d) = d
-
-
-
-now :: forall e. Eff (now :: D.Now | e) Date
-now = Date <$> D.now
+underlyingDate :: Date -> DateTime
+underlyingDate (Date dt) = dt
 
 
 
 dateFromString :: String -> Maybe Date
-dateFromString str = Date <$> D.fromString str
+dateFromString str = Date <$> fromString str
 
 
 
-defaultDate :: Date
-defaultDate = Date (fromJust $ D.fromString "1982-01-01T05:00:00.000Z")
+defaultDate :: Partial => Date
+defaultDate = Date (fromJust $ fromString "1982-01-01T05:00:00.000Z")
 
 
 
 year :: Date -> D.Year
-year = U.year <<< underlyingDate
+year = D.year <<< date <<< underlyingDate
 
 
 
 month :: Date -> D.Month
-month = U.month <<< underlyingDate
-
-
-
-dayOfMonth :: Date -> D.DayOfMonth
-dayOfMonth = U.dayOfMonth <<< underlyingDate
-
-
-
-unYear :: D.Year -> Int
-unYear (D.Year n) = n
-
-
-
-unDayOfMonth :: D.DayOfMonth -> Int
-unDayOfMonth (D.DayOfMonth n) = n
+month = D.month <<< date <<< underlyingDate
 
 
 
@@ -160,11 +120,11 @@ threeDecimalFix s =
 
 
 
-threeDecimalCandidate :: String -> Maybe D.Date
+threeDecimalCandidate :: String -> Maybe DateTime
 threeDecimalCandidate s =
   case threeDecimalFix s of
        Nothing -> Nothing
-       Just s' -> D.fromString s'
+       Just s' -> fromString s'
 
 
 
@@ -172,16 +132,16 @@ readDate :: Foreign -> F Date
 readDate f =
   case tagOf f of
        "Date" ->
-         case D.fromJSDate <$> unsafeReadTagged "Date" f of
-              Right (Just d) -> Right (Date d)
-              Right Nothing -> Left (TypeMismatch "invalid date" "asdf")
-              Left a -> Left a
+         case toDateTime <$> unsafeReadTagged "Date" f of
+              Right (Just dt) -> Right (Date dt)
+              Right Nothing   -> Left (TypeMismatch "invalid date" "asdf")
+              Left a          -> Left a
        "String" -> do
          case (unsafeReadTagged "String" f) of
               Left a  -> Left a
               Right s ->
-                case D.fromString s of
-                  Just d  -> Right (Date d)
+                case fromString s of
+                  Just dt -> Right (Date dt)
                   Nothing ->
                     -- weird scenario: Perhaps s is of the form: 2015-09-15T05:19:18.556641000000Z
                     -- everything (your phone, browser, etc) works fine.. except your kindle paperwhite.
@@ -191,42 +151,93 @@ readDate f =
                     -- hdgarrood is always a big help with date issues
                     case threeDecimalCandidate s of
                       Nothing -> Left (TypeMismatch "invalid date" "invalid date")
-                      Just d  -> Right (Date d)
-
+                      Just dt -> Right (Date dt)
        "Number" ->
-         case D.fromEpochMilliseconds <<< T.Milliseconds <$> unsafeReadTagged "Number" f of
-              Right (Just d) -> (Right (Date d))
-              Right Nothing -> Left (TypeMismatch "invalid read" "expecting epoch milliseconds")
-              Left a -> Left a
+         case fromEpochMilliseconds <<< T.Milliseconds <$> unsafeReadTagged "Number" f of
+              Right (Just dt) -> (Right (Date dt))
+              Right Nothing   -> Left (TypeMismatch "invalid read" "expecting epoch milliseconds")
+              Left a          -> Left a
        _ ->
          Left (TypeMismatch "Expecting date" (tagOf f))
 
 
 
-toISOString :: Date -> String
-toISOString (Date d) = runFn2 jsDateMethod "toISOString" (D.toJSDate d)
-
-
-
 yyyy_mm_dd :: Date -> String
-yyyy_mm_dd (Date date) = y ++ "-" ++ m ++ "-" ++ d
+yyyy_mm_dd dt =
+  y <> "-" <> m <> "-" <> d
   where
-    y = (ypad <<< show) case U.year date of D.Year n -> n
-    m = pad (1 + (fromEnum $ U.month date))
-    d = pad case U.dayOfMonth date of D.DayOfMonth day -> day
+    y = (ypad <<< show) case year dt of n -> n
+    m = pad (1 + (fromEnum $ month dt))
+    d = pad case dayOfMonth dt of DayOfMonth day -> day
     pad n = let str = show n
              in case Str.length str of
-                   1 ->  "0" ++ str
+                   1 ->  "0" <> str
                    _ -> str
     ypad str =
       case Str.length str of
            0 -> "0000"
-           1 -> "000" ++ str
-           2 -> "00" ++ str
-           3 -> "0" ++ str
+           1 -> "000" <> str
+           2 -> "00" <> str
+           3 -> "0" <> str
            _ -> str
 
 
 
 failDate :: forall a. Either String a
-failDate = fail "Could not parse Date."
+failDate = Left "Could not parse Date."
+
+
+
+-- | Attempts to construct a date from a string value using JavaScript’s
+-- | [Date.parse() method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/parse).
+-- | `Nothing` is returned if the parse fails or the resulting date is invalid.
+fromString :: String -> Maybe DateTime
+fromString = toDateTime <<< jsDateConstructor
+
+
+
+-- | Effect type for when accessing the current date/time.
+foreign import data Now :: !
+
+-- | Gets a `Date` value for the current date/time according to the current
+-- | machine’s local time.
+now :: forall e. Partial => Eff (now :: Now | e) Date
+now = nowImpl (\x -> Date $ fromJust $ toDateTime x)
+
+
+
+-- | A day-of-month date component value.
+newtype DayOfMonth = DayOfMonth Int
+
+instance eqDayOfMonth :: Eq DayOfMonth where
+  eq (DayOfMonth x) (DayOfMonth y) = x == y
+
+instance ordDayOfMonth :: Ord DayOfMonth where
+  compare (DayOfMonth x) (DayOfMonth y) = compare x y
+
+instance showDayOfMonth :: Show DayOfMonth where
+  show (DayOfMonth day) = "(DayOfMonth " <> show day <> ")"
+
+-- | Gets the UTC day-of-month value for a date.
+dayOfMonth :: Date -> DayOfMonth
+dayOfMonth (Date d) = runFn2 jsDateMethod "getUTCDate" $ fromDateTime d
+
+
+
+
+foreign import nowImpl :: forall e. (JSDate -> Date) -> Eff (now :: Now | e) Date
+
+foreign import jsDateConstructor :: forall a. a -> JSDate
+
+foreign import jsDateMethod :: forall a. Fn2 String JSDate a
+
+
+
+-- | Converts a date value to an ISO 8601 Extended format date string.
+toISOStringNoEff :: JSDate -> String
+toISOStringNoEff dt = runFn2 jsDateMethod "toISOString" dt
+
+
+
+fromEpochMilliseconds :: T.Milliseconds -> Maybe DateTime
+fromEpochMilliseconds = toDateTime <<< jsDateConstructor

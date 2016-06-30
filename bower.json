@@ -18,17 +18,13 @@
 
   ],
   "dependencies": {
-    "purescript-json": "^0.5.0",
-    "purescript-prelude": "^0.1.5",
-    "purescript-lists": "^0.7.10",
-    "purescript-argonaut": "^0.12.0",
-    "purescript-argonaut-codecs": "^0.6.1",
-    "purescript-test-unit": "^5.0.0",
-    "purescript-foreign": "^0.7.2",
-    "purescript-datetime": "^0.9.2"
-  },
-  "resolutions": {
-    "purescript-sets": "^0.5.7",
-    "purescript-maps": "^0.5.0"
+    "purescript-prelude": "^1.0.1",
+    "purescript-lists": "^1.0.1",
+    "purescript-argonaut": "^1.0.0",
+    "purescript-argonaut-codecs": "^1.0.0",
+    "purescript-test-unit": "^7.0.0",
+    "purescript-foreign": "^1.0.0",
+    "purescript-datetime": "^1.0.0",
+    "purescript-js-date": "^1.0.0"
   }
 }
