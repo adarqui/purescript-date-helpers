@@ -18,12 +18,13 @@ module Data.Date.Helpers (
 
 
 import Control.Monad.Eff        (Eff)
+import Control.Monad.Except     (runExcept, throwError)
 import Data.Argonaut.Core       (toString)
 import Data.Argonaut.Decode     (class DecodeJson)
 import Data.Argonaut.Encode     (class EncodeJson, encodeJson)
 import Data.Enum                (fromEnum)
 import Data.Either              (Either(Left,Right))
-import Data.Foreign             (F, Foreign, ForeignError(TypeMismatch), tagOf, unsafeReadTagged)
+import Data.Foreign             (F, Foreign, ForeignError(TypeMismatch), tagOf, unsafeReadTagged, fail)
 import Data.Foreign.Class       (class IsForeign)
 import Data.Function.Uncurried  (Fn2(), runFn2)
 import Data.Function            (on)
@@ -35,7 +36,7 @@ import Data.Time.Duration       (Milliseconds(Milliseconds)) as T
 import Data.Maybe               (Maybe (..), fromJust)
 import Prelude                  (class Show, class Ord, class Eq
                                 ,show, compare, eq, pure
-                                ,($), (+), (<<<), (<$>), (==), (/=), (<>), (>>=))
+                                ,($), (+), (<<<), (<$>), (==), (<>))
 
 
 
@@ -116,7 +117,7 @@ threeDecimalFix s =
        [fst_half, snd_half] -> Just $ fst_half <> "." <> Str.take 3 snd_half <> "Z"
        _                    -> Nothing
   where
-  s' = Str.split "." s
+  s' = Str.split (Str.Pattern ".") s
 
 
 
@@ -132,16 +133,16 @@ readDate :: Foreign -> F Date
 readDate f =
   case tagOf f of
        "Date" ->
-         case toDateTime <$> unsafeReadTagged "Date" f of
-              Right (Just dt) -> Right (Date dt)
-              Right Nothing   -> Left (TypeMismatch "invalid date" "asdf")
-              Left a          -> Left a
+         case toDateTime <$> (runExcept $ unsafeReadTagged "Date" f) of
+              Right (Just dt) -> pure $ Date dt
+              Right Nothing   -> fail $ TypeMismatch "invalid date" "asdf"
+              Left a          -> throwError a
        "String" -> do
-         case (unsafeReadTagged "String" f) of
-              Left a  -> Left a
+         case (runExcept $ unsafeReadTagged "String" f) of
+              Left a  -> throwError a
               Right s ->
                 case fromString s of
-                  Just dt -> Right (Date dt)
+                  Just dt -> pure $ Date dt
                   Nothing ->
                     -- weird scenario: Perhaps s is of the form: 2015-09-15T05:19:18.556641000000Z
                     -- everything (your phone, browser, etc) works fine.. except your kindle paperwhite.
@@ -150,15 +151,15 @@ readDate f =
                     -- https://en.wikipedia.org/wiki/ISO_8601#Times
                     -- hdgarrood is always a big help with date issues
                     case threeDecimalCandidate s of
-                      Nothing -> Left (TypeMismatch "invalid date" "invalid date")
-                      Just dt -> Right (Date dt)
+                      Nothing -> fail $ TypeMismatch "invalid date" "invalid date"
+                      Just dt -> pure $ Date dt
        "Number" ->
-         case fromEpochMilliseconds <<< T.Milliseconds <$> unsafeReadTagged "Number" f of
-              Right (Just dt) -> (Right (Date dt))
-              Right Nothing   -> Left (TypeMismatch "invalid read" "expecting epoch milliseconds")
-              Left a          -> Left a
+         case fromEpochMilliseconds <<< T.Milliseconds <$> runExcept (unsafeReadTagged "Number" f) of
+              Right (Just dt) -> pure $ Date dt
+              Right Nothing   -> fail (TypeMismatch "invalid read" "expecting epoch milliseconds")
+              Left a          -> throwError a
        _ ->
-         Left (TypeMismatch "Expecting date" (tagOf f))
+         fail $ (TypeMismatch "Expecting date" (tagOf f))
 
 
 

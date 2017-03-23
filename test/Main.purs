@@ -2,6 +2,7 @@ module Test.Main where
 
 
 
+import Control.Monad.Aff.AVar           (AVAR())
 import Control.Monad.Eff                (Eff())
 import Control.Monad.Eff.Console        (CONSOLE())
 import Data.Argonaut.Core               (jsonEmptyObject)
@@ -72,7 +73,7 @@ instance test2DecodeJson :: DecodeJson Test2 where
 
 
 
-main :: forall eff. Partial => Eff (console :: CONSOLE, testOutput :: TESTOUTPUT | eff) Unit
+main :: forall eff. Partial => Eff (avar :: AVAR, console :: CONSOLE, testOutput :: TESTOUTPUT | eff) Unit
 main = runTest do
 
   test "Internal Tests" do
