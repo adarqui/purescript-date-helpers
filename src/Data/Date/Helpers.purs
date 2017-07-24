@@ -17,7 +17,7 @@ module Data.Date.Helpers (
 
 
 
-import Control.Monad.Eff        (Eff)
+import Control.Monad.Eff        (Eff, kind Effect)
 import Control.Monad.Except     (runExcept, throwError)
 import Data.Argonaut.Core       (toString)
 import Data.Argonaut.Decode     (class DecodeJson)
@@ -25,7 +25,7 @@ import Data.Argonaut.Encode     (class EncodeJson, encodeJson)
 import Data.Enum                (fromEnum)
 import Data.Either              (Either(Left,Right))
 import Data.Foreign             (F, Foreign, ForeignError(TypeMismatch), tagOf, unsafeReadTagged, fail)
-import Data.Foreign.Class       (class IsForeign)
+import Data.Foreign.Class       (class Decode)
 import Data.Function.Uncurried  (Fn2(), runFn2)
 import Data.Function            (on)
 import Data.JSDate              (JSDate, toDateTime, fromDateTime)
@@ -66,8 +66,8 @@ instance dateShow :: Show Date where
 
 
 
-instance isForeignDate :: IsForeign Date where
-  read = readDate
+instance decodeData :: Decode Date where
+  decode = readDate
 
 
 
@@ -198,7 +198,7 @@ fromString = toDateTime <<< jsDateConstructor
 
 
 -- | Effect type for when accessing the current date/time.
-foreign import data Now :: !
+foreign import data Now :: Effect
 
 -- | Gets a `Date` value for the current date/time according to the current
 -- | machine’s local time.

@@ -13,7 +13,7 @@ import Data.Argonaut.Encode             (class EncodeJson, encodeJson)
 import Data.Date.Helpers                (Date, dateFromString, defaultDate, threeDecimalFix)
 import Data.Either                      (Either, either)
 import Data.Maybe                       (Maybe (..))
-import Prelude                          (class Show, show, class Eq, id, Unit, const, ($), bind, (==), pure, (&&))
+import Prelude                          (class Show, show, class Eq, id, Unit, const, pure, bind, discard, ($), (==), (&&))
 import Test.Unit                        (test)
 import Test.Unit.Assert                 as Assert
 import Test.Unit.Console                (TESTOUTPUT())
