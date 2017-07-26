@@ -34,6 +34,7 @@ import Data.Date                as D
 import Data.DateTime            (DateTime, date)
 import Data.Time.Duration       (Milliseconds(Milliseconds)) as T
 import Data.Maybe               (Maybe (..), fromJust)
+import Partial.Unsafe           (unsafePartial)
 import Prelude                  (class Show, class Ord, class Eq
                                 ,show, compare, eq, pure
                                 ,($), (+), (<<<), (<$>), (==), (<>))
@@ -96,8 +97,8 @@ dateFromString str = Date <$> fromString str
 
 
 
-defaultDate :: Partial => Date
-defaultDate = Date (fromJust $ fromString "1982-01-01T05:00:00.000Z")
+defaultDate :: Date
+defaultDate = Date (unsafePartial $ fromJust $ fromString "1982-01-01T05:00:00.000Z")
 
 
 

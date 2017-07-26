@@ -14,7 +14,7 @@ import Data.Date.Helpers                (Date, dateFromString, defaultDate, thre
 import Data.Either                      (Either, either)
 import Data.Maybe                       (Maybe (..))
 import Prelude                          (class Show, show, class Eq, id, Unit, const, pure, bind, discard, ($), (==), (&&))
-import Test.Unit                        (test)
+import Test.Unit                        (test, suite)
 import Test.Unit.Assert                 as Assert
 import Test.Unit.Console                (TESTOUTPUT())
 import Test.Unit.Main                   (runTest)
@@ -73,51 +73,57 @@ instance test2DecodeJson :: DecodeJson Test2 where
 
 
 
-main :: forall eff. Partial => Eff (avar :: AVAR, console :: CONSOLE, testOutput :: TESTOUTPUT | eff) Unit
+main :: forall eff. Eff (avar :: AVAR, console :: CONSOLE, testOutput :: TESTOUTPUT | eff) Unit
 main = runTest do
 
-  test "Internal Tests" do
+  suite "purescript-date-helpers" do
 
-    Assert.assertFalse "Should not be equal." $ test1_0 == test1_a
-    Assert.equal test1_a test1_a
+    test "Internal Tests" do
 
-    Assert.assertFalse "Should not be equal." $ test2_0 == test2_a
-    Assert.equal test2_a test2_a
+      Assert.assertFalse "Should not be equal." $ test1_0 == test1_a
+      Assert.equal test1_a test1_a
 
-
-
-  test "Argonaut Date Helpers" do
-
-    Assert.equal
-      "2017-01-01T05:00:00.000Z"
-      $ either id show (decodeJson (encodeJson (dateFromString "2017-01-01T05:00:00.000Z")) :: Either String Date)
-
-    Assert.equal
-      test1_a
-      $ either (const test1_0) id (decodeJson (encodeJson test1_a) :: Either String Test1)
-
-    Assert.equal
-      test2_a
-      $ either (const test2_0) id (decodeJson (encodeJson test2_a) :: Either String Test2)
-
-    Assert.equal
-      test2_0
-      $ either (const test2_a) id (decodeJson (encodeJson test2_0) :: Either String Test2)
+      Assert.assertFalse "Should not be equal." $ test2_0 == test2_a
+      Assert.equal test2_a test2_a
 
 
 
-  test "Weird case: threeDecimalCandidate" do
-    Assert.equal
-      (Just "2015-09-15T05:19:18.556Z")
-      $ threeDecimalFix "2015-09-15T05:19:18.556641000000Z"
+    test "Argonaut Date Helpers" do
 
-    Assert.equal
-      "2015-09-15T05:19:18.556Z"
-      $ either id show (decodeJson (encodeJson (dateFromString "2015-09-15T05:19:18.556641000000Z")) :: Either String Date)
+      Assert.equal
+        "2017-01-01T05:00:00.000Z"
+        $ either id show (decodeJson (encodeJson (dateFromString "2017-01-01T05:00:00.000Z")) :: Either String Date)
+
+      Assert.equal
+        "2016-08-19T22:47:43.886Z"
+        $ either id show (decodeJson (encodeJson (dateFromString "2016-08-19T22:47:43.886804Z")) :: Either String Date)
+
+      Assert.equal
+        test1_a
+        $ either (const test1_0) id (decodeJson (encodeJson test1_a) :: Either String Test1)
+
+      Assert.equal
+        test2_a
+        $ either (const test2_0) id (decodeJson (encodeJson test2_a) :: Either String Test2)
+
+      Assert.equal
+        test2_0
+        $ either (const test2_a) id (decodeJson (encodeJson test2_0) :: Either String Test2)
 
 
-  where
-  test1_0 = Test1 {f1: false, d1: defaultDate}
-  test1_a = Test1 {f1: true,  d1: defaultDate}
-  test2_0 = Test2 {f2: false, d2: Nothing}
-  test2_a = Test2 {f2: true,  d2: Just defaultDate}
+
+    test "Weird case: threeDecimalCandidate" do
+      Assert.equal
+        (Just "2015-09-15T05:19:18.556Z")
+        $ threeDecimalFix "2015-09-15T05:19:18.556641000000Z"
+
+      Assert.equal
+        "2015-09-15T05:19:18.556Z"
+        $ either id show (decodeJson (encodeJson (dateFromString "2015-09-15T05:19:18.556641000000Z")) :: Either String Date)
+
+
+    where
+    test1_0 = Test1 {f1: false, d1: defaultDate}
+    test1_a = Test1 {f1: true,  d1: defaultDate}
+    test2_0 = Test2 {f2: false, d2: Nothing}
+    test2_a = Test2 {f2: true,  d2: Just defaultDate}
