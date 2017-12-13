@@ -1,6 +1,6 @@
 {
   "name": "purescript-date-helpers",
-  "version": "1.2.0",
+  "version": "0.11.0",
   "homepage": "https://github.com/adarqui/purescript-date-helpers",
   "description": "Some Date helpers I needed.. modeled after something I saw from parsonsmatt",
   "license": "MIT",
@@ -27,7 +27,7 @@
     "purescript-js-date": "^5.1.0",
     "purescript-foreign": "^4.0.1",
     "purescript-foreign-generic": "^5.0.0",
-    "purescript-foreign-helpers": "^1.0.0"
+    "purescript-foreign-helpers": "^0.11.0"
   },
   "resolutions": {
     "purescript-test-unit": "^13.0.0",
